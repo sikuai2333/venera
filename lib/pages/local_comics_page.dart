@@ -471,6 +471,10 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     if (Directory(cacheDir).existsSync()) {
       Directory(cacheDir).deleteSync(recursive: true);
     }
+    // Clean up old output file to prevent "Failed to write content" error
+    if (File(outFile).existsSync()) {
+      File(outFile).deleteSync();
+    }
     Directory(cacheDir).createSync();
     var loadingController = showLoadingDialog(
       context,
