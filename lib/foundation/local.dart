@@ -427,6 +427,7 @@ class LocalManager with ChangeNotifier {
       directory = Directory(FilePath.join(directory.path, cid));
     }
     var files = <File>[];
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'];
     await for (var entity in directory.list()) {
       if (entity is File) {
         // Do not exclude comic.cover, since it may be the first page of the chapter.
@@ -436,6 +437,11 @@ class LocalManager with ChangeNotifier {
         }
         //Hidden file in some file system
         if (entity.name.startsWith('.')) {
+          continue;
+        }
+        // Only include image files to prevent crash when non-image files exist
+        var ext = entity.extension.toLowerCase();
+        if (!imageExtensions.contains(ext)) {
           continue;
         }
         files.add(entity);
