@@ -221,6 +221,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       } else {
         saveTo = Directory(path!);
       }
+      // Check if the image file already exists (skip already downloaded images)
+      if (_isImageAlreadyDownloaded(saveTo, i)) {
+        continue;
+      }
       var task = _ImageDownloadWrapper(
         this,
         _images!.keys.elementAt(_chapter),
@@ -236,6 +240,26 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       });
       downloading++;
     }
+  }
+
+  /// Check if an image with the given index already exists in the directory
+  bool _isImageAlreadyDownloaded(Directory dir, int index) {
+    if (!dir.existsSync()) return false;
+    try {
+      var files = dir.listSync();
+      for (var file in files) {
+        if (file is File) {
+          var name = file.name;
+          var nameWithoutExt = name.contains('.') ? name.split('.').first : name;
+          if (nameWithoutExt == index.toString()) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore errors, proceed with download
+    }
+    return false;
   }
 
   @override
@@ -387,9 +411,36 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     while (_chapter < _images!.length) {
       var images = _images![_images!.keys.elementAt(_chapter)]!;
       tasks.clear();
+      // Get the save directory for this chapter
+      Directory chapterDir;
+      if (comic!.chapters != null) {
+        chapterDir = Directory(FilePath.join(
+          path!,
+          LocalManager.getChapterDirectoryName(
+            _images!.keys.elementAt(_chapter),
+          ),
+        ));
+      } else {
+        chapterDir = Directory(path!);
+      }
       while (_index < images.length) {
+        // Check if this image is already downloaded
+        if (_isImageAlreadyDownloaded(chapterDir, _index)) {
+          _index++;
+          _downloadedCount++;
+          _message = "$_downloadedCount/$_totalCount";
+          notifyListeners();
+          continue;
+        }
         _scheduleTasks();
-        var task = tasks[_index]!;
+        var task = tasks[_index];
+        if (task == null) {
+          // Task was not created (possibly already downloaded), skip
+          _index++;
+          _downloadedCount++;
+          _message = "$_downloadedCount/$_totalCount";
+          continue;
+        }
         await task.wait();
         if (isPaused) {
           return;

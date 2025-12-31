@@ -491,6 +491,12 @@ class LocalManager with ChangeNotifier {
     if (comic != null) {
       return Directory(FilePath.join(path, comic.directory));
     }
+    // Check if there's an existing download task with a path for this comic
+    for (var task in downloadingTasks) {
+      if (task.id == id && task.comicType == type && task.path != null) {
+        return Directory(task.path!);
+      }
+    }
     const comicDirectoryMaxLength = 80;
     if (name.length > comicDirectoryMaxLength) {
       name = name.substring(0, comicDirectoryMaxLength);
