@@ -113,6 +113,8 @@ class _CommentsPageState extends State<CommentsPage> {
             return e.avatar != null;
           }) ||
           (widget.replyComment?.avatar != null);
+      // For the main comment (replyComment), always check its own avatar
+      var showReplyCommentAvatar = widget.replyComment?.avatar != null;
       return Column(
         children: [
           Expanded(
@@ -133,7 +135,7 @@ class _CommentsPageState extends State<CommentsPage> {
                               comment: widget.replyComment!,
                               source: widget.source,
                               comic: widget.data,
-                              showAvatar: showAvatar,
+                              showAvatar: showReplyCommentAvatar,
                               showActions: false,
                             ),
                             const SizedBox(height: 8),
