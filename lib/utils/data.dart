@@ -15,6 +15,19 @@ import 'package:zip_flutter/zip_flutter.dart';
 
 import 'io.dart';
 
+/// Move a file to a new location, handling cross-disk moves on Windows.
+/// On Windows, renameSync fails when moving files across different drives.
+/// This function first tries renameSync, and falls back to copy+delete if it fails.
+Future<void> moveFile(File source, String targetPath) async {
+  try {
+    source.renameSync(targetPath);
+  } catch (e) {
+    // renameSync failed (possibly cross-disk move on Windows), use copy+delete
+    await source.copy(targetPath);
+    await source.delete();
+  }
+}
+
 Future<File> exportAppData([bool sync = true]) async {
   var time = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var cacheFilePath = FilePath.join(App.cachePath, '$time.venera');
@@ -69,15 +82,14 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
     if (await historyFile.exists()) {
       HistoryManager().close();
       File(FilePath.join(App.dataPath, "history.db")).deleteIfExistsSync();
-      historyFile.renameSync(FilePath.join(App.dataPath, "history.db"));
+      await moveFile(historyFile, FilePath.join(App.dataPath, "history.db"));
       HistoryManager().init();
     }
     if (await localFavoriteFile.exists()) {
       LocalFavoritesManager().close();
       File(FilePath.join(App.dataPath, "local_favorite.db"))
           .deleteIfExistsSync();
-      localFavoriteFile
-          .renameSync(FilePath.join(App.dataPath, "local_favorite.db"));
+      await moveFile(localFavoriteFile, FilePath.join(App.dataPath, "local_favorite.db"));
       LocalFavoritesManager().init();
     }
     if (await appdataFile.exists()) {
@@ -88,7 +100,7 @@ Future<void> importAppData(File file, [bool checkVersion = false]) async {
     if (await cookieFile.exists()) {
       SingleInstanceCookieJar.instance?.dispose();
       File(FilePath.join(App.dataPath, "cookie.db")).deleteIfExistsSync();
-      cookieFile.renameSync(FilePath.join(App.dataPath, "cookie.db"));
+      await moveFile(cookieFile, FilePath.join(App.dataPath, "cookie.db"));
       SingleInstanceCookieJar.instance =
           SingleInstanceCookieJar(FilePath.join(App.dataPath, "cookie.db"))
             ..init();
