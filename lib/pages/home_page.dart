@@ -302,7 +302,7 @@ class _HistoryState extends State<_History> {
                     scrollDirection: Axis.horizontal,
                     itemCount: history.length,
                     itemBuilder: (context, index) {
-                      final heroID = history[index].id.hashCode;
+                      final heroID = 'history_${history[index].id}'.hashCode;
                       return SimpleComicTile(
                         comic: history[index],
                         heroID: heroID,
@@ -412,7 +412,7 @@ class _LocalState extends State<_Local> {
                     scrollDirection: Axis.horizontal,
                     itemCount: local.length,
                     itemBuilder: (context, index) {
-                      final heroID = local[index].id.hashCode;
+                      final heroID = 'local_${local[index].id}'.hashCode;
                       return SimpleComicTile(
                         comic: local[index],
                         heroID: heroID,
