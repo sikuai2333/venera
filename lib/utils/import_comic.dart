@@ -234,13 +234,14 @@ class ImportComic {
       }
     }
 
-    if (fileList.isEmpty) {
+    // If no images in root directory and no chapters, this is not a valid comic
+    if (fileList.isEmpty && !hasChapters) {
       return null;
     }
 
     fileList.sort();
     coverPath = fileList.firstWhereOrNull((l) => l.startsWith('cover')) ??
-        fileList.first;
+        (fileList.isNotEmpty ? fileList.first : '');
 
     chapters.sort();
     if (hasChapters && coverPath == '') {
@@ -248,8 +249,12 @@ class ImportComic {
       var firstChapter = Directory('${directory.path}/${chapters.first}');
       await for (var entry in firstChapter.list()) {
         if (entry is File) {
-          coverPath = entry.name;
-          break;
+          const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jpe'];
+          if (imageExtensions.contains(entry.extension)) {
+            // coverPath should be relative to the comic directory, not the chapter directory
+            coverPath = '${chapters.first}/${entry.name}';
+            break;
+          }
         }
       }
     }
