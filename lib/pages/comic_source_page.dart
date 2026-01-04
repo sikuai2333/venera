@@ -254,6 +254,11 @@ class _BodyState extends State<_Body> {
                   onPressed: _selectFile,
                 ),
                 FilledButton.tonalIcon(
+                  icon: Icon(Icons.add_circle_outline),
+                  label: Text("Baozi".tl),
+                  onPressed: _addBaoziSource,
+                ),
+                FilledButton.tonalIcon(
                   icon: Icon(Icons.help_outline),
                   label: Text("Help".tl),
                   onPressed: help,
@@ -279,6 +284,28 @@ class _BodyState extends State<_Body> {
     } catch (e, s) {
       App.rootContext.showMessage(message: e.toString());
       Log.error("Add comic source", "$e\n$s");
+    }
+  }
+
+  void _addBaoziSource() {
+    const baoziUrl = "https://raw.githubusercontent.com/venera-app/venera-configs/refs/heads/main/baozi.js";
+    const baoziKey = "baozi";
+
+    // 检查是否已存在
+    var existingSource = ComicSource.all().where((s) => s.key == baoziKey).firstOrNull;
+    if (existingSource != null) {
+      // 已存在，询问是否更新
+      showConfirmDialog(
+        context: context,
+        title: "Update".tl,
+        content: "Comic source '@n' already exists. Update it?".tlParams({"n": existingSource.name}),
+        onConfirm: () {
+          ComicSourcePage.update(existingSource);
+        },
+      );
+    } else {
+      // 不存在，直接添加
+      handleAddSource(baoziUrl);
     }
   }
 
